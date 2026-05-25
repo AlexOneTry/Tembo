@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Avito Analytics — Аналитика рекламы и продаж</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- TailwindCSS (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
+  <!-- SheetJS -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- jsPDF + autotable for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.0/jspdf.plugin.autotable.min.js"></script>
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="theme-dark">
+
+<!-- ====== TOASTS ====== -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ====== MOBILE NAV TOGGLE ====== -->
+<button id="mobileNavToggle" class="md:hidden fixed top-4 left-4 z-50 glass-button p-3 rounded-xl" aria-label="Меню">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+</button>
+
+<div class="app-shell">
+
+  <!-- ====== SIDEBAR ====== -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">A</div>
+      <div>
+        <div class="brand-title">Avito Analytics</div>
+        <div class="brand-sub">Pro Dashboard</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item active" data-section="dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        <span>Дашборд</span>
+      </a>
+      <a class="nav-item" data-section="analytics">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 6-8"/></svg>
+        <span>Аналитика</span>
+      </a>
+      <a class="nav-item" data-section="ads">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        <span>Объявления</span>
+      </a>
+      <a class="nav-item" data-section="finance">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span>Финансы</span>
+      </a>
+      <a class="nav-item" data-section="conversions">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        <span>Конверсии</span>
+      </a>
+      <a class="nav-item" data-section="reports">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+        <span>Отчёты</span>
+      </a>
+      <a class="nav-item" data-section="compare">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h7M3 17h7M14 7h7M14 17h7M7 3v8M17 13v8"/></svg>
+        <span>Сравнение периодов</span>
+      </a>
+      <a class="nav-item" data-section="settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <span>Настройки</span>
+      </a>
+      <a class="nav-item" data-section="export">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        <span>Экспорт</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="data-status" id="dataStatus">
+        <span class="status-dot"></span>
+        <span class="status-text">Нет данных</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ====== MAIN ====== -->
+  <main class="main">
+
+    <!-- Top bar -->
+    <header class="topbar glass">
+      <div class="topbar-left">
+        <label class="topbar-upload">
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" hidden />
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          <span>Загрузить Excel</span>
+        </label>
+
+        <div class="search-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" id="globalSearch" placeholder="Поиск объявлений..." />
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="period-picker">
+          <input type="date" id="dateFrom" />
+          <span class="text-slate-400">—</span>
+          <input type="date" id="dateTo" />
+        </div>
+        <button id="resetFilters" class="glass-button" title="Сбросить фильтры">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+        </button>
+        <button id="themeToggle" class="glass-button" title="Сменить тему">
+          <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </button>
+        <button id="refreshBtn" class="glass-button gradient-btn" title="Обновить">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+          <span class="hidden md:inline">Обновить</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Content sections -->
+    <div class="content">
+
+      <!-- ============ DASHBOARD ============ -->
+      <section class="section active" id="section-dashboard">
+        <div class="section-header">
+          <div>
+            <h1 class="section-title">Дашборд</h1>
+            <p class="section-sub">Общая сводка по эффективности рекламы и продаж</p>
+          </div>
+          <div class="section-actions">
+            <span class="badge" id="periodBadge">Все периоды</span>
+          </div>
+        </div>
+
+        <!-- Drop zone (visible while no data) -->
+        <div id="dropZone" class="dropzone glass">
+          <div class="dropzone-inner">
+            <div class="dz-icon">
+              <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            </div>
+            <h3 class="dz-title">Перетащите Excel-файл сюда</h3>
+            <p class="dz-sub">Поддерживаются .xlsx, .xls, .csv — выгрузки статистики Авито</p>
+            <label class="btn-primary mt-4">
+              <input type="file" id="fileInput2" accept=".xlsx,.xls,.csv" hidden />
+              Выбрать файл
+            </label>
+            <div class="dz-history" id="historyList"></div>
+          </div>
+        </div>
+
+        <!-- KPIs -->
+        <div id="kpiGrid" class="kpi-grid"></div>
+
+        <!-- Charts grid -->
+        <div class="charts-grid">
+          <div class="glass card">
+            <div class="card-head">
+              <h3>Динамика расходов и контактов</h3>
+              <div class="card-actions">
+                <button class="chip-btn export-chart" data-chart="lineDaily">PNG</button>
+              </div>
+            </div>
+            <div class="chart-wrap"><canvas id="lineDaily"></canvas></div>
+          </div>
+
+          <div class="glass card">
+            <div class="card-head">
+              <h3>Воронка продаж</h3>
+              <button class="chip-btn export-chart" data-chart="funnel">PNG</button>
+            </div>
+            <div class="chart-wrap funnel-wrap"><canvas id="funnel"></canvas></div>
+          </div>
+
+          <div class="glass card">
+            <div class="card-head">
+              <h3>Распределение расходов по категориям</h3>
+              <button class="chip-btn export-chart" data-chart="pieCategory">PNG</button>
+            </div>
+            <div class="chart-wrap"><canvas id="pieCategory"></canvas></div>
+          </div>
+
+          <div class="glass card">
+            <div class="card-head">
+              <h3>CTR и Конверсия по дням</h3>
+              <button class="chip-btn export-chart" data-chart="lineCTR">PNG</button>
+            </div>
+            <div class="chart-wrap"><canvas id="lineCTR"></canvas></div>
+          </div>
+
+          <div class="glass card span-2">
+            <div class="card-head">
+              <h3>Тепловая карта активности (день недели × час)</h3>
+            </div>
+            <div id="heatmap" class="heatmap"></div>
+          </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="glass card mt-6">
+          <div class="card-head">
+            <h3>AI-рекомендации по оптимизации</h3>
+          </div>
+          <div id="recommendations" class="recommendations"></div>
+        </div>
+
+        <!-- Top / worst ads -->
+        <div class="grid-2 mt-6">
+          <div class="glass card">
+            <div class="card-head"><h3>🏆 Топ объявлений по ROMI</h3></div>
+            <div class="table-wrap"><table class="data-table" id="topAdsTable"></table></div>
+          </div>
+          <div class="glass card">
+            <div class="card-head"><h3>⚠️ Убыточные объявления</h3></div>
+            <div class="table-wrap"><table class="data-table" id="worstAdsTable"></table></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ ANALYTICS ============ -->
+      <section class="section" id="section-analytics">
+        <div class="section-header">
+          <div>
+            <h1 class="section-title">Аналитика</h1>
+            <p class="section-sub">Детальные метрики по категориям, регионам и периодам</p>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="glass card">
+            <div class="card-head"><h3>Эффективность по категориям</h3></div>
+            <div class="chart-wrap"><canvas id="barCategory"></canvas></div>
+          </div>
+          <div class="glass card">
+            <div class="card-head"><h3>Эффективность по регионам</h3></div>
+            <div class="chart-wrap"><canvas id="barRegion"></canvas></div>
+          </div>
+          <div class="glass card span-2">
+            <div class="card-head"><h3>Доход vs Расход (по дням)</h3></div>
+            <div class="chart-wrap"><canvas id="barRevExp"></canvas></div>
+          </div>
+        </div>
+
+        <div class="glass card mt-6">
+          <div class="card-head">
+            <h3>Сводная таблица по категориям</h3>
+            <div class="card-actions">
+              <input type="text" id="catFilter" class="search-input" placeholder="Фильтр по категории..." />
+            </div>
+          </div>
+          <div class="table-wrap"><table id="categoryTable" class="data-table"></table></div>
+        </div>
+      </section>
+
+      <!-- ============ ADS ============ -->
+      <section class="section" id="section-ads">
+        <div class="section-header">
+          <div>
+            <h1 class="section-title">Объявления</h1>
+            <p class="section-sub">Полная таблица всех объявлений с фильтрами и сортировкой</p>
+          </div>
+        </div>
+
+        <div class="filter-row glass">
+          <div>
+            <label>Категория</label>
+            <select id="adFilterCategory"></select>
+          </div>
+          <div>
+            <label>Регион</label>
+            <select id="adFilterRegion"></select>
+          </div>
+          <div>
+            <label>Эффективность</label>
+            <select id="adFilterEff">
+              <option value="">Все</option>
+              <option value="good">Прибыльные</option>
+              <option value="bad">Убыточные</option>
+              <option value="zero">Без продаж</option>
+            </select>
+          </div>
+          <div>
+            <label>Мин. бюджет (₽)</label>
+            <input type="number" id="adFilterBudget" min="0" placeholder="0" />
+          </div>
+          <div class="grow">
+            <label>Поиск</label>
+            <input type="text" id="adFilterSearch" placeholder="Название объявления..." />
+          </div>
+          <button id="adFilterReset" class="glass-button">Сбросить</button>
+        </div>
+
+        <div class="glass card mt-4">
+          <div class="card-head">
+            <h3>Все объявления</h3>
+            <div class="card-actions">
+              <button id="exportAdsCSV" class="chip-btn">CSV</button>
+              <button id="exportAdsXLSX" class="chip-btn">XLSX</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="adsTable" class="data-table sortable"></table>
+          </div>
+          <div class="pagination" id="adsPagination"></div>
+        </div>
+      </section>
+
+      <!-- ============ FINANCE ============ -->
+      <section class="section" id="section-finance">
+        <div class="section-header">
+          <div>
+            <h1 class="section-title">Финансы</h1>
+            <p class="section-sub">Расходы, доход, прибыль, ROI и маржинальность</p>
+          </div>
+        </div>
+
+        <div id="financeKpi" class="kpi-grid"></div>
+
+        <div class="charts-grid mt-4">
+          <div class="glass card span-2">
+            <div class="card-head"><h3>Прибыль/убыток по дням</h3></div>
+            <div class="chart-wrap"><canvas id="lineProfit"></canvas></div>
+          </div>
+          <div class="glass card">
+            <div class="card-head"><h3>Структура расходов</h3></div>
+            <div class="chart-wrap"><canvas id="doughnutExp"></canvas></div>
+          </div>
+          <div class="glass card">
+            <div class="card-head"><h3>Маржинальность по категориям</h3></div>
+            <div class="chart-wrap"><canvas id="barMargin"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CONVERSIONS ============ -->
+      <section class="section" id="section-conversions">
+        <div class="section-header">
+          <div>
+            <h1 class="section-title">Конверсии</h1>
+            <p class="section-sub">Воронка и переходы между этапами</p>
+          </div>
+        </div>
+
+        <div id="convKpi" class="kpi-grid"></div>
+
+        <div class="charts-grid mt-4">
+          <div class="glass card">
+            <div class="card-head"><h3>Воронка</h3></div>
+            <div class="chart-wrap"><canvas id="funnel2"></canvas></div>
+          </div>
+          <div class="glass card">
+            <div class="card-head"><h3>Конверсии по дням</h3></div>
+            <div class="chart-wrap"><canvas id="lineConv"></canvas></div>
+          </div>
+          <div class="glass card span-2">
+            <div class="card-head"><h3>Конверсии по объявлениям (Топ-15)</h3></div>
+            <div class="chart-wrap"><canvas id="barConvAds"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ REPORTS ============ -->
+      <section class="section" id="section-reports">
+        <div class="section-header">
+          <div>
+            <h1 class="section-title">Отчёты</h1>
+            <p class="section-sub">Готовые отчёты для скачивания</p>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="glass card report-card" data-report="summary">
+            <div class="report-icon gradient-purple">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+            </div>
+            <h3>Сводный отчёт</h3>
+            <p>KPI, графики, воронка</p>
+            <div class="report-actions">
+              <button class="chip-btn" data-format="pdf">PDF</button>
+              <button class="chip-btn" data-format="xlsx">XLSX</button>
+              <button class="chip-btn" data-format="csv">CSV</button>
+            </div>
+          </div>
+          <div class="glass card report-card" data-report="ads">
+            <div class="report-icon gradient-cyan">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            </div>
+            <h3>Отчёт по объявлениям</h3>
+            <p>Полная таблица с метриками</p>
+            <div class="report-actions">
+              <button class="chip-btn" data-format="pdf">PDF</button>
+              <button class="chip-btn" data-format="xlsx">XLSX</button>
+              <button class="chip-btn" data-format="csv">CSV</button>
+            </div>
+          </div>
+          <div class="glass card report-card" data-report="finance">
+            <div class="report-icon gradient-pink">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            </div>
+            <h3>Финансовый отчёт</h3>
+            <p>Доходы, расходы, прибыль</p>
+            <div class="report-actions">
+              <button class="chip-btn" data-format="pdf">PDF</button>
+              <button class="chip-btn" data-format="xlsx">XLSX</button>
+              <button class="chip-btn" data-format="csv">CSV</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass card mt-6">
+          <div class="card-head"><h3>Прогноз эффективности (на 7 дней)</h3></div>
+          <div class="chart-wrap"><canvas id="forecastChart"></canvas></div>
+        </div>
+      </section>
+
+      <!-- ============ COMPARE ============ -->
+      <section class="section" id="section-compare">
+        <div class="section-header">
+          <div>
+            <h1 class="section-title">Сравнение периодов</h1>
+            <p class="section-sub">Выберите два периода для сравнения метрик</p>
+          </div>
+        </div>
+
+        <div class="compare-grid glass card">
+          <div>
+            <h4>Период A</h4>
+            <div class="period-picker">
+              <input type="date" id="cmpAFrom" />
+              <span>—</span>
+              <input type="date" id="cmpATo" />
+            </div>
+          </div>
+          <div>
+            <h4>Период B</h4>
+            <div class="period-picker">
+              <input type="date" id="cmpBFrom" />
+              <span>—</span>
+              <input type="date" id="cmpBTo" />
+            </div>
+          </div>
+          <button id="cmpRun" class="btn-primary">Сравнить</button>
+        </div>
+
+        <div id="compareResult" class="mt-6"></div>
+      </section>
+
+      <!-- ============ SETTINGS ============ -->
+      <section class="section" id="section-settings">
+        <div class="section-header">
+          <div>
+            <h1 class="section-title">Настройки</h1>
+            <p class="section-sub">Конфигурация приложения и расчётов</p>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <div class="glass card">
+            <h3>Финансовые параметры</h3>
+            <label class="field"><span>Средний чек (₽), если не указан в файле</span>
+              <input type="number" id="cfgAvgCheck" min="0" />
+            </label>
+            <label class="field"><span>Маржа продажи (%) по умолчанию</span>
+              <input type="number" id="cfgMargin" min="0" max="100" />
+            </label>
+            <label class="field"><span>Валюта</span>
+              <input type="text" id="cfgCurrency" maxlength="5" />
+            </label>
+            <button id="saveSettings" class="btn-primary">Сохранить</button>
+          </div>
+          <div class="glass card">
+            <h3>Сопоставление колонок</h3>
+            <p class="hint">Если автоопределение колонок ошиблось — задайте вручную (имя колонки в Excel).</p>
+            <div id="mappingFields"></div>
+            <button id="saveMapping" class="btn-primary">Сохранить</button>
+          </div>
+          <div class="glass card">
+            <h3>Данные</h3>
+            <p class="hint">Управление сохранёнными данными в браузере (LocalStorage).</p>
+            <button id="clearStorage" class="glass-button danger">Очистить все данные</button>
+            <button id="exportSession" class="glass-button mt-2">Экспорт сессии (JSON)</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ EXPORT ============ -->
+      <section class="section" id="section-export">
+        <div class="section-header">
+          <div>
+            <h1 class="section-title">Экспорт</h1>
+            <p class="section-sub">Сохраните данные, отчёты и графики</p>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="glass card">
+            <h3>📊 Экспорт данных</h3>
+            <p>Сырые данные текущего датасета</p>
+            <div class="report-actions">
+              <button id="expDataXLSX" class="chip-btn">XLSX</button>
+              <button id="expDataCSV" class="chip-btn">CSV</button>
+              <button id="expDataJSON" class="chip-btn">JSON</button>
+            </div>
+          </div>
+          <div class="glass card">
+            <h3>📈 Экспорт KPI</h3>
+            <p>Все расчётные KPI</p>
+            <div class="report-actions">
+              <button id="expKpiPDF" class="chip-btn">PDF</button>
+              <button id="expKpiXLSX" class="chip-btn">XLSX</button>
+            </div>
+          </div>
+          <div class="glass card">
+            <h3>🖼️ Экспорт графиков</h3>
+            <p>Все графики в PNG</p>
+            <div class="report-actions">
+              <button id="expChartsAll" class="chip-btn">Все PNG</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- Modal -->
+<div id="modal" class="modal hidden">
+  <div class="modal-backdrop"></div>
+  <div class="modal-body glass">
+    <button class="modal-close" id="modalClose">×</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- Splash / loader -->
+<div id="splash" class="splash hidden">
+  <div class="splash-spinner"></div>
+  <p id="splashText">Обработка файла...</p>
+</div>
+
+<!-- Scripts (order matters) -->
+<script src="js/storage.js"></script>
+<script src="js/excel.js"></script>
+<script src="js/analytics.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/export.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
