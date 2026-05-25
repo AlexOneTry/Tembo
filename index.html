@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Профессиональная аналитика рекламы и продаж Авито на основе Excel-файлов" />
+  <title>Avito Analytics Pro — Аналитика рекламы и продаж</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50:  '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            },
+            neon: {
+              cyan:    '#22d3ee',
+              violet:  '#a78bfa',
+              pink:    '#f472b6',
+              lime:    '#a3e635',
+              amber:   '#fbbf24',
+              rose:    '#fb7185',
+            },
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="font-sans bg-slate-950 text-slate-100">
+
+  <!-- Animated background -->
+  <div class="bg-aurora" aria-hidden="true">
+    <div class="aurora aurora-1"></div>
+    <div class="aurora aurora-2"></div>
+    <div class="aurora aurora-3"></div>
+  </div>
+
+  <!-- App shell -->
+  <div id="app" class="relative z-10 min-h-screen flex">
+
+    <!-- ============ SIDEBAR ============ -->
+    <aside id="sidebar" class="sidebar glass-panel">
+      <div class="sidebar-header">
+        <div class="logo-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
+            <path d="M3 3v18h18"></path>
+            <path d="M7 14l4-4 3 3 5-6"></path>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <div class="text-lg font-bold tracking-tight">Avito Analytics</div>
+          <div class="text-xs text-slate-400">PRO • Локальная аналитика</div>
+        </div>
+        <button class="sidebar-toggle" id="sidebarToggle" title="Свернуть меню">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+            <path d="M15 6l-6 6 6 6"></path>
+          </svg>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav" id="sidebarNav">
+        <a href="#dashboard"   class="nav-item active" data-view="dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-ico"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+          <span>Дашборд</span>
+        </a>
+        <a href="#analytics"   class="nav-item" data-view="analytics">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-ico"><path d="M3 3v18h18"/><path d="M7 13l4-4 4 4 5-6"/></svg>
+          <span>Аналитика</span>
+        </a>
+        <a href="#ads"         class="nav-item" data-view="ads">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-ico"><path d="M3 11l18-8-3 18-7-7-8-3z"/></svg>
+          <span>Объявления</span>
+        </a>
+        <a href="#finance"     class="nav-item" data-view="finance">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-ico"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          <span>Финансы</span>
+        </a>
+        <a href="#conversions" class="nav-item" data-view="conversions">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-ico"><polygon points="3 3 21 3 13 13 13 21 11 21 11 13 3 3"/></svg>
+          <span>Конверсии</span>
+        </a>
+        <a href="#reports"     class="nav-item" data-view="reports">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-ico"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+          <span>Отчёты</span>
+        </a>
+        <a href="#compare"     class="nav-item" data-view="compare">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-ico"><path d="M16 3h5v5"/><path d="M4 20l16-16"/><path d="M8 21H3v-5"/></svg>
+          <span>Сравнение периодов</span>
+        </a>
+        <a href="#settings"    class="nav-item" data-view="settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-ico"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          <span>Настройки</span>
+        </a>
+        <a href="#export"      class="nav-item" data-view="export">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-ico"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Экспорт</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="dataset-status" id="datasetStatus">
+          <div class="dot" id="datasetDot"></div>
+          <div>
+            <div class="text-xs text-slate-400">Источник данных</div>
+            <div class="text-sm font-semibold" id="datasetLabel">Файл не загружен</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ============ MAIN ============ -->
+    <main class="flex-1 min-w-0">
+      <!-- Top bar -->
+      <header class="topbar glass-panel">
+        <button class="icon-btn lg:hidden" id="mobileSidebarToggle" title="Меню">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+
+        <div class="topbar-left">
+          <label class="upload-btn" title="Загрузить Excel-файл Авито">
+            <input type="file" id="fileInput" accept=".xlsx,.xls" class="hidden" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Загрузить Excel</span>
+          </label>
+
+          <div class="period-picker">
+            <input type="date" id="dateFrom" class="period-input" />
+            <span class="text-slate-500">—</span>
+            <input type="date" id="dateTo"   class="period-input" />
+          </div>
+
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-slate-400"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="globalSearch" placeholder="Поиск по объявлениям, категориям…" class="search-input" />
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <button class="icon-btn" id="refreshBtn" title="Пересчитать">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+          </button>
+          <button class="icon-btn" id="themeToggle" title="Сменить тему">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+          </button>
+          <button class="icon-btn" id="historyBtn" title="История загрузок">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </button>
+          <button class="icon-btn" id="filtersBtn" title="Фильтры">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- View content area -->
+      <div id="viewport" class="viewport">
+
+        <!-- =============== DASHBOARD =============== -->
+        <section class="view active" data-view="dashboard">
+          <!-- Drop / empty state -->
+          <div id="dropZone" class="drop-zone">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-14 h-14 text-neon-violet"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <div class="text-2xl font-bold mt-3">Перетащите Excel-файл Авито сюда</div>
+            <div class="text-slate-400 mt-1">или нажмите «Загрузить Excel» вверху. Поддерживаются .xlsx и .xls</div>
+            <div class="text-xs text-slate-500 mt-4">Все вычисления выполняются локально в вашем браузере. Данные никуда не отправляются.</div>
+          </div>
+
+          <div id="kpiGrid" class="kpi-grid hidden"></div>
+
+          <div id="dashboardCharts" class="charts-grid hidden">
+            <div class="chart-card lg:col-span-2">
+              <div class="chart-header">
+                <div>
+                  <div class="chart-title">Динамика по дням</div>
+                  <div class="chart-sub">Расходы, контакты, показы</div>
+                </div>
+                <div class="chart-legend" id="timeseriesLegend"></div>
+              </div>
+              <div class="chart-body">
+                <canvas id="chartTimeseries"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <div>
+                  <div class="chart-title">Воронка продаж</div>
+                  <div class="chart-sub">Показы → Просмотры → Контакты → Продажи</div>
+                </div>
+              </div>
+              <div class="chart-body" id="funnelBox"></div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <div>
+                  <div class="chart-title">Распределение расходов</div>
+                  <div class="chart-sub">По категориям</div>
+                </div>
+              </div>
+              <div class="chart-body">
+                <canvas id="chartCategoryPie"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card lg:col-span-2">
+              <div class="chart-header">
+                <div>
+                  <div class="chart-title">Эффективность объявлений</div>
+                  <div class="chart-sub">ТОП-10 по контактам</div>
+                </div>
+              </div>
+              <div class="chart-body">
+                <canvas id="chartTopAds"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card lg:col-span-3">
+              <div class="chart-header">
+                <div>
+                  <div class="chart-title">Тепловая карта активности</div>
+                  <div class="chart-sub">День недели × Час публикации (контакты)</div>
+                </div>
+              </div>
+              <div class="chart-body" id="heatmapBox"></div>
+            </div>
+          </div>
+
+          <div id="recommendationsBox" class="reco-box hidden"></div>
+        </section>
+
+        <!-- =============== ANALYTICS =============== -->
+        <section class="view" data-view="analytics">
+          <h2 class="view-title">Детальная аналитика</h2>
+          <div class="metrics-grid" id="metricsGrid"></div>
+
+          <div class="charts-grid mt-6">
+            <div class="chart-card lg:col-span-2">
+              <div class="chart-header">
+                <div class="chart-title">CTR / Конверсия / CPC по дням</div>
+              </div>
+              <div class="chart-body"><canvas id="chartMetricsLine"></canvas></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Источники контактов</div>
+              </div>
+              <div class="chart-body"><canvas id="chartContactSources"></canvas></div>
+            </div>
+          </div>
+
+          <div class="chart-card mt-6">
+            <div class="chart-header">
+              <div class="chart-title">Эффективность по категориям</div>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table" id="categoryTable">
+                <thead></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- =============== ADS =============== -->
+        <section class="view" data-view="ads">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h2 class="view-title m-0">Объявления</h2>
+            <div class="flex gap-2 items-center">
+              <select id="adsSort" class="select-input">
+                <option value="contacts_desc">Сортировка: больше контактов</option>
+                <option value="contacts_asc">Сортировка: меньше контактов</option>
+                <option value="spend_desc">Сортировка: больше расходов</option>
+                <option value="spend_asc">Сортировка: меньше расходов</option>
+                <option value="ctr_desc">Сортировка: лучший CTR</option>
+                <option value="roi_desc">Сортировка: лучший ROI</option>
+                <option value="cpl_asc">Сортировка: лучший CPL</option>
+              </select>
+              <input type="text" id="adsSearch" class="search-input !w-56" placeholder="Поиск объявлений…" />
+            </div>
+          </div>
+
+          <div class="chart-card mt-4">
+            <div class="table-wrap">
+              <table class="data-table" id="adsTable">
+                <thead></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="pagination" id="adsPagination"></div>
+          </div>
+
+          <div class="charts-grid mt-6">
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title text-emerald-300">🏆 Лучшие объявления</div>
+              </div>
+              <div id="topAdsList" class="ad-list"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title text-rose-300">⚠ Худшие объявления</div>
+              </div>
+              <div id="worstAdsList" class="ad-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =============== FINANCE =============== -->
+        <section class="view" data-view="finance">
+          <h2 class="view-title">Финансы</h2>
+          <div id="financeKpi" class="kpi-grid"></div>
+
+          <div class="charts-grid mt-6">
+            <div class="chart-card lg:col-span-2">
+              <div class="chart-header"><div class="chart-title">Доходы и расходы по дням</div></div>
+              <div class="chart-body"><canvas id="chartFinance"></canvas></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-header"><div class="chart-title">Структура расходов</div></div>
+              <div class="chart-body"><canvas id="chartSpendStructure"></canvas></div>
+            </div>
+            <div class="chart-card lg:col-span-3">
+              <div class="chart-header"><div class="chart-title">Маржинальность и ROMI</div></div>
+              <div class="chart-body"><canvas id="chartMargin"></canvas></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =============== CONVERSIONS =============== -->
+        <section class="view" data-view="conversions">
+          <h2 class="view-title">Конверсии</h2>
+          <div id="conversionsKpi" class="kpi-grid"></div>
+
+          <div class="charts-grid mt-6">
+            <div class="chart-card lg:col-span-2">
+              <div class="chart-header"><div class="chart-title">Воронка конверсий</div></div>
+              <div class="chart-body" id="bigFunnelBox"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-header"><div class="chart-title">Доли конверсий</div></div>
+              <div class="chart-body"><canvas id="chartConversionPie"></canvas></div>
+            </div>
+            <div class="chart-card lg:col-span-3">
+              <div class="chart-header"><div class="chart-title">Динамика конверсий по дням</div></div>
+              <div class="chart-body"><canvas id="chartConversionsLine"></canvas></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =============== REPORTS =============== -->
+        <section class="view" data-view="reports">
+          <h2 class="view-title">Отчёты</h2>
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="chart-card">
+              <div class="chart-title">Сводный отчёт</div>
+              <p class="text-slate-400 text-sm mt-1">Полная сводка с KPI и графиками за выбранный период.</p>
+              <button class="action-btn mt-3" data-export="pdf">📄 Сгенерировать PDF</button>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Excel-выгрузка</div>
+              <p class="text-slate-400 text-sm mt-1">Все объявления с метриками в формате Excel.</p>
+              <button class="action-btn mt-3" data-export="xlsx">📊 Скачать Excel</button>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">CSV-выгрузка</div>
+              <p class="text-slate-400 text-sm mt-1">Таблица в формате CSV для аналитических систем.</p>
+              <button class="action-btn mt-3" data-export="csv">📄 Скачать CSV</button>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">PNG-снимки графиков</div>
+              <p class="text-slate-400 text-sm mt-1">Высокое качество, удобно для презентаций.</p>
+              <button class="action-btn mt-3" data-export="png">🖼 Сохранить графики</button>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">JSON-снимок</div>
+              <p class="text-slate-400 text-sm mt-1">Дамп всех вычислений и подготовленных метрик.</p>
+              <button class="action-btn mt-3" data-export="json">🧾 Скачать JSON</button>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Прогноз эффективности</div>
+              <p class="text-slate-400 text-sm mt-1">Линейный прогноз метрик на 7 дней вперёд.</p>
+              <button class="action-btn mt-3" id="forecastBtn">🔮 Построить прогноз</button>
+            </div>
+          </div>
+
+          <div class="chart-card mt-6 hidden" id="forecastCard">
+            <div class="chart-header"><div class="chart-title">Прогноз ключевых метрик (7 дней)</div></div>
+            <div class="chart-body"><canvas id="chartForecast"></canvas></div>
+          </div>
+        </section>
+
+        <!-- =============== COMPARE =============== -->
+        <section class="view" data-view="compare">
+          <h2 class="view-title">Сравнение периодов</h2>
+          <div class="chart-card">
+            <div class="grid md:grid-cols-2 gap-4">
+              <div>
+                <div class="text-xs text-slate-400 mb-1">Период A</div>
+                <div class="flex gap-2">
+                  <input type="date" id="cmpAFrom" class="period-input flex-1" />
+                  <input type="date" id="cmpATo"   class="period-input flex-1" />
+                </div>
+              </div>
+              <div>
+                <div class="text-xs text-slate-400 mb-1">Период B</div>
+                <div class="flex gap-2">
+                  <input type="date" id="cmpBFrom" class="period-input flex-1" />
+                  <input type="date" id="cmpBTo"   class="period-input flex-1" />
+                </div>
+              </div>
+            </div>
+            <button id="runCompareBtn" class="action-btn mt-4">Сравнить</button>
+          </div>
+          <div id="compareResults" class="mt-6"></div>
+        </section>
+
+        <!-- =============== SETTINGS =============== -->
+        <section class="view" data-view="settings">
+          <h2 class="view-title">Настройки</h2>
+          <div class="chart-card">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <label class="setting-label">Валюта</label>
+                <select id="setCurrency" class="select-input w-full">
+                  <option value="RUB">₽ Российский рубль</option>
+                  <option value="USD">$ US Dollar</option>
+                  <option value="EUR">€ Euro</option>
+                  <option value="KZT">₸ Тенге</option>
+                  <option value="BYN">Br Белорусский рубль</option>
+                </select>
+              </div>
+              <div>
+                <label class="setting-label">Средний чек (если не указан в файле)</label>
+                <input type="number" id="setAvgCheck" class="period-input w-full" placeholder="0" min="0" />
+              </div>
+              <div>
+                <label class="setting-label">Маржинальность (%) товара/услуги</label>
+                <input type="number" id="setMargin" class="period-input w-full" placeholder="30" min="0" max="100" />
+              </div>
+              <div>
+                <label class="setting-label">Целевой CPL (стоимость лида)</label>
+                <input type="number" id="setTargetCPL" class="period-input w-full" placeholder="0" min="0" />
+              </div>
+              <div>
+                <label class="setting-label">Колонка с расходами</label>
+                <select id="setColSpend" class="select-input w-full"></select>
+              </div>
+              <div>
+                <label class="setting-label">Колонка с показами</label>
+                <select id="setColImpressions" class="select-input w-full"></select>
+              </div>
+              <div>
+                <label class="setting-label">Колонка с просмотрами</label>
+                <select id="setColViews" class="select-input w-full"></select>
+              </div>
+              <div>
+                <label class="setting-label">Колонка с контактами</label>
+                <select id="setColContacts" class="select-input w-full"></select>
+              </div>
+              <div>
+                <label class="setting-label">Колонка с категорией</label>
+                <select id="setColCategory" class="select-input w-full"></select>
+              </div>
+              <div>
+                <label class="setting-label">Колонка с датой</label>
+                <select id="setColDate" class="select-input w-full"></select>
+              </div>
+            </div>
+            <div class="flex gap-2 mt-6">
+              <button id="saveSettingsBtn" class="action-btn">💾 Сохранить</button>
+              <button id="resetDataBtn" class="action-btn !bg-rose-600/30 !border-rose-500/40 hover:!bg-rose-600/40">🗑 Сбросить данные</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- =============== EXPORT =============== -->
+        <section class="view" data-view="export">
+          <h2 class="view-title">Экспорт</h2>
+          <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button class="export-card" data-export="pdf">
+              <div class="text-3xl">📄</div>
+              <div class="text-lg font-semibold mt-2">PDF отчёт</div>
+              <div class="text-slate-400 text-sm">Полный отчёт со сводкой</div>
+            </button>
+            <button class="export-card" data-export="xlsx">
+              <div class="text-3xl">📊</div>
+              <div class="text-lg font-semibold mt-2">Excel</div>
+              <div class="text-slate-400 text-sm">Книга со всеми метриками</div>
+            </button>
+            <button class="export-card" data-export="csv">
+              <div class="text-3xl">📋</div>
+              <div class="text-lg font-semibold mt-2">CSV</div>
+              <div class="text-slate-400 text-sm">Универсальная таблица</div>
+            </button>
+            <button class="export-card" data-export="png">
+              <div class="text-3xl">🖼</div>
+              <div class="text-lg font-semibold mt-2">PNG графиков</div>
+              <div class="text-slate-400 text-sm">Картинки для презентации</div>
+            </button>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toastBox" class="toast-box"></div>
+
+  <!-- Modal: History -->
+  <div class="modal hidden" id="historyModal">
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-panel">
+      <div class="modal-header">
+        <div class="text-lg font-bold">История загрузок</div>
+        <button class="icon-btn" data-modal-close>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="historyList"></div>
+    </div>
+  </div>
+
+  <!-- Modal: Filters -->
+  <div class="modal hidden" id="filtersModal">
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-panel">
+      <div class="modal-header">
+        <div class="text-lg font-bold">Фильтры</div>
+        <button class="icon-btn" data-modal-close>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="setting-label">Категория</label>
+            <select id="filterCategory" class="select-input w-full"><option value="">Все</option></select>
+          </div>
+          <div>
+            <label class="setting-label">Регион / Город</label>
+            <select id="filterRegion" class="select-input w-full"><option value="">Все</option></select>
+          </div>
+          <div>
+            <label class="setting-label">Тип рекламы</label>
+            <select id="filterAdType" class="select-input w-full"><option value="">Все</option></select>
+          </div>
+          <div>
+            <label class="setting-label">Минимальный бюджет</label>
+            <input type="number" id="filterMinBudget" class="period-input w-full" placeholder="0" min="0" />
+          </div>
+          <div>
+            <label class="setting-label">Минимальный CTR (%)</label>
+            <input type="number" id="filterMinCTR" class="period-input w-full" placeholder="0" min="0" step="0.1" />
+          </div>
+          <div>
+            <label class="setting-label">Только прибыльные</label>
+            <select id="filterProfitable" class="select-input w-full">
+              <option value="">Не важно</option>
+              <option value="yes">Только прибыльные</option>
+              <option value="no">Только убыточные</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="action-btn !bg-slate-700/40 !border-slate-500/30" id="filtersReset">Сбросить</button>
+        <button class="action-btn" id="filtersApply">Применить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Preview -->
+  <div class="modal hidden" id="previewModal">
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-panel modal-xl">
+      <div class="modal-header">
+        <div>
+          <div class="text-lg font-bold">Предпросмотр файла</div>
+          <div class="text-xs text-slate-400" id="previewMeta">—</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <select id="sheetSelect" class="select-input"></select>
+          <button class="icon-btn" data-modal-close>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="table-wrap">
+          <table class="data-table" id="previewTable"><thead></thead><tbody></tbody></table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="action-btn" id="confirmImport">✅ Использовать эти данные</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App scripts -->
+  <script src="js/parser.js"></script>
+  <script src="js/analytics.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
